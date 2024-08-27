@@ -1,6 +1,4 @@
-# syntax=docker/dockerfile:1
-
-FROM python:3
+FROM python:3 as base
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
@@ -8,6 +6,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 CMD [ "python", "./src/bot.py" ]
+
+EXPOSE 8080
 
 
 # Comments are provided throughout this file to help you get started.

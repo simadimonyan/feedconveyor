@@ -2,7 +2,6 @@ import asyncio
 import logging
 import sys
 import json
-from os import getenv
 
 from aiogram import Bot, Dispatcher, html
 from aiogram.client.default import DefaultBotProperties
@@ -42,16 +41,19 @@ async def command_start_handler(message: Message) -> None:
 @dp.message(Command("posts"))
 async def posts_handler(message: Message) -> None:
     """
-    
+
     Handler will forward receive a message back to the sender
 
     By default, message handler will handle all message types (like a text, photo, sticker etc.)
+    
     """
     try:
-        await message.answer(habrparser.getActualPost())
-    except TypeError:
+        text = habrparser.getActualPost()
+        print(text)
+        await message.answer(text)
+    except Exception as e:
         # But not all the types is supported to be copied so need to handle it
-        await message.answer("Nice try!")
+        await message.answer("bot error: " + str(e))
 
 
 async def main() -> None:

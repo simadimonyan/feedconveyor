@@ -8,11 +8,50 @@
 # database or a cache. For examples, see the Awesome Compose repository:
 # https://github.com/docker/awesome-compose
 services:
-  server:
+  bot:
     build:
       context: .
+    container_name: telegram-bot
     ports:
       - 8080:8080
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /src
+          ignore:
+            - node_modules/
+        - action: rebuild 
+          path: requirements.txt
+    # depends_on:
+    #   - ollama
+    # networks:
+    #   - local-network
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   restart: always
+  #   container_name: ollama-ai
+  #   expose:
+  #     - 11434
+  #   ports:
+  #     - "11434:11434"
+  #   deploy:
+  #       resources:
+  #           limits:
+  #             cpus: '2'
+  #             memory: 16G
+  #   volumes:
+  #     - ./dockervolumes/ollama:/root/.ollama
+  #     - .:/ollamascript
+  #   entrypoint: ["/usr/bin/bash", "/ollamascript/ollamascript.sh"]
+  #   networks:
+  #     - local-network
+
+networks:
+  local-network:
+    driver: bridge
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
