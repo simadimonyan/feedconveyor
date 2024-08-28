@@ -1,2 +1,3 @@
-./depreciated
-./configs
+depreciated
+config/bot-config.json
+src/.DS_Store
