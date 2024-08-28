@@ -1,5 +1,8 @@
 {
     "telegram": {
         "API_TOKEN": ""
+    },
+    "ai": {
+        "SMM_PROMPT": ""
     }
 }
