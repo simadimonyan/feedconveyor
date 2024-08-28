@@ -2,4 +2,3 @@ aiogram
 feedparser
 requests
 beautifulsoup4
-ollama
