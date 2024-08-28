@@ -9,8 +9,11 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 from aiogram.filters import Command
+from aiogram.types import LinkPreviewOptions
 
-from handlers import habrparser
+from fabrics.telegrampost import Post, PostType
+
+dp = Dispatcher()
 
 def load_data_from_json():
     try:
@@ -19,48 +22,31 @@ def load_data_from_json():
             return data
     except FileNotFoundError:
         return {}
-    
-config = load_data_from_json()
-
-# Bot token can be obtained via https://t.me/BotFather
-TOKEN = config["telegram"]["API_TOKEN"]
-
-# All handlers should be attached to the Router (or Dispatcher)
-
-dp = Dispatcher()
-
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
-    """
-    This handler receives messages with `/start` command
-    """
     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
 
 
 @dp.message(Command("posts"))
 async def posts_handler(message: Message) -> None:
-    """
-
-    Handler will forward receive a message back to the sender
-
-    By default, message handler will handle all message types (like a text, photo, sticker etc.)
-    
-    """
     try:
-        text = habrparser.getActualPost()
+        post = Post()
+        (link, text) = post.createPost(PostType.HABR_NEWS)
         print(text)
-        await message.answer(text)
+        preview = LinkPreviewOptions(
+            url=link,
+            prefer_large_media=True
+        )
+        await message.answer(text, parse_mode="HTML", link_preview_options=preview)
     except Exception as e:
-        # But not all the types is supported to be copied so need to handle it
         await message.answer("bot error: " + str(e))
 
 
 async def main() -> None:
-    # Initialize Bot instance with default bot properties which will be passed to all API calls
+    config = load_data_from_json()
+    TOKEN = config["telegram"]["API_TOKEN"]
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-
-    # And the run events dispatching
     await dp.start_polling(bot)
 
 
