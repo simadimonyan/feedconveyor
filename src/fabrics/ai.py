@@ -1,4 +1,3 @@
-from bot import load_data_from_json
 
 import requests
 import json
@@ -6,6 +5,14 @@ import json
 class AI():
 
     def __init__(self):
+        
+        def load_data_from_json():
+            try:
+                with open('./configs/bot-config.json', 'r') as file:
+                    data = json.load(file)
+                    return data
+            except FileNotFoundError:
+                return {}
 
         config = load_data_from_json()
         print(f"Config: {config}") 

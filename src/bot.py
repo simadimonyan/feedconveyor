@@ -1,15 +1,12 @@
-import asyncio
-import logging
-import sys
-import json
-
+from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram import Bot, Dispatcher, html
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.types import LinkPreviewOptions
+from aiogram.types import CallbackQuery
+from aiogram import F
 
 from fabrics.telegrampost import Post, PostType
 
@@ -28,8 +25,16 @@ async def command_start_handler(message: Message) -> None:
     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
 
 
-@dp.message(Command("posts"))
-async def posts_handler(message: Message) -> None:
+
+@dp.callback_query(F.data == "habr_news")
+async def post_handler(call: CallbackQuery) -> None:
+    await call.message.edit_text('Генерирую новость, это займет какое-то время...')
+
+    kb = [
+        [InlineKeyboardButton(text=" 🔄 ", callback_data="habr_news")],
+        [InlineKeyboardButton(text=" Опубликовать ", callback_data="approve")]
+    ]
+    
     try:
         post = Post()
         (link, text) = post.createPost(PostType.HABR_NEWS)
@@ -38,9 +43,11 @@ async def posts_handler(message: Message) -> None:
             url=link,
             prefer_large_media=True
         )
-        await message.answer(text, parse_mode="HTML", link_preview_options=preview)
+        await call.answer('Генерация завершена', show_alert=False)
+        await call.message.edit_text(text, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb),
+                                  link_preview_options=preview)
     except Exception as e:
-        await message.answer("bot error: " + str(e))
+        await call.message.answer("bot error: " + str(e))
 
 
 async def main() -> None:
