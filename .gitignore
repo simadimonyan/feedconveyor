@@ -1,4 +1,7 @@
 configs/bot-config.json
 depreciated
 configs
+data
 .DS_Store
+.env
+db

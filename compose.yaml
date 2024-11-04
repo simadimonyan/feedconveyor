@@ -3,10 +3,6 @@ services:
     build:
       context: .
     container_name: telegram-bot
-    ports:
-      - 8080:8080
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     develop:
       watch:
         - action: sync
@@ -16,7 +12,12 @@ services:
             - node_modules/
         - action: rebuild 
           path: requirements.txt
-    # depends_on:
+      depends_on:
+        - postgresql-pgvector
+    networks:
+      - local-network
+    ports:
+      - 8081:8081
     #   - ollama
     # networks:
     #   - local-network
@@ -39,6 +40,36 @@ services:
   #   entrypoint: ["/usr/bin/bash", "/ollamascript/ollamascript.sh"]
   #   networks:
   #     - local-network
+  postgresql-pgvector:
+      image: pgvector/pgvector:pg16
+      container_name: postgresql-pgvector
+      env_file:
+        - ".env"
+      restart: always
+      environment:
+        - POSTGRES_DB=feedconveyor
+        - POSTGRES_USER=admin
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      volumes:
+        - ./db:/var/lib/postgresql/data
+      networks:
+        - local-network
+      ports:
+        - 8181:5432
+        
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: always
+    env_file:
+      - ".env"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    ports:
+      - 8080:80
+    networks:
+      - local-network
 
 networks:
   local-network:

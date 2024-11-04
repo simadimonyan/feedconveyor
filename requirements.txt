@@ -1,4 +1,12 @@
-aiogram
 feedparser
 requests
 beautifulsoup4
+schedule
+langchain-ollama
+langchain-postgres
+langchain
+
+aiogram
+SQLAlchemy
+asyncio
+psycopg
