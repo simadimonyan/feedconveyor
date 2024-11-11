@@ -3,12 +3,12 @@ import requests
 import json
 import os
 
-class AI():
+class AIDirectCall():
 
     def __init__(self):
-        load_dotenv("/app/.env")
+        load_dotenv(".env")
         self.smm_prompt = os.getenv("SMM_PROMPT")
-        self.ollama_url = os.getenv("OLLAMA_URL")
+        self.ollama_url = os.getenv("OLLAMA_GENERATE_URL")
 
     def generatePostText(self, text):
         system_prompt = self.smm_prompt

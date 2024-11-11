@@ -1,8 +1,8 @@
 from parsers.habrnews import Habr
-from handlers.ai import AI
+from handlers.ai_utils import AIDirectCall
 from enum import Enum
 
-ai = AI()
+ai = AIDirectCall()
 
 class PostType(Enum):
     HABR_NEWS = 1,

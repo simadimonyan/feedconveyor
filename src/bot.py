@@ -1,5 +1,5 @@
 from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup
-from aiogram import Bot, Dispatcher, html
+from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.types import Message
@@ -13,6 +13,7 @@ from langchain_core.documents import Document
 import asyncio
 import logging
 import sys
+from parsers.habrnews import Habr
 
 
 from dotenv import load_dotenv
@@ -20,12 +21,12 @@ import os
 
 dp = Dispatcher()
 
-config = load_dotenv("/app/.env")
+config = load_dotenv(".env")
 token = os.getenv("API_TOKEN")
 id = os.getenv("CHANNEL_ID")
 username = os.getenv("CHANNEL_USERNAME")
 
-bot = Bot(token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 
 # COMMANDS
@@ -42,7 +43,7 @@ async def generate(message: Message) -> None:
 # CALLBACKS
 
 
-# HABR
+# HABR PARSE BUTTON
 
 @dp.callback_query(F.data == "habr_news")
 async def post_handler(call: CallbackQuery) -> None:
@@ -68,7 +69,7 @@ async def post_handler(call: CallbackQuery) -> None:
         await call.message.answer("bot error: " + str(e))
 
 
-# POST GENERATION APPROVAL
+# POST PUBLICATION APPROVAL BUTTON
 
 @dp.callback_query(F.data == "approve")
 async def post_handler(call: CallbackQuery) -> None:
@@ -84,24 +85,25 @@ async def post_handler(call: CallbackQuery) -> None:
         await call.message.answer(f"❌ Произошла ошибка при публикации записи: {str(e)}")
 
 
-# AI
+# AI AGENT BUTTON
 
 @dp.callback_query(F.data == "agent")
 async def post_handler(call: CallbackQuery) -> None:
-    try:
-        db = Database()
 
-        docs = [
+    db = Database()
+
+    postLink, title, text = Habr.getNews()
+
+    docs = [
             Document(
-                page_content="test",
+                page_content=text,
                 metadata={"id": 1}
             )
         ]
 
-        db.store_data(docs)
-        await call.message.answer(f"done")
-    except Exception as e:
-        await call.message.answer(f"❌ Произошла ошибка: {str(e)}")
+    await db.store_data(docs)
+    await call.message.answer(f"done")
+    
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)

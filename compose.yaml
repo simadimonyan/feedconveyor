@@ -16,46 +16,23 @@ services:
         - postgresql-pgvector
     networks:
       - local-network
-    ports:
-      - 8081:8081
-    #   - ollama
-    # networks:
-    #   - local-network
-  # ollama:
-  #   image: ollama/ollama:latest
-  #   restart: always
-  #   container_name: ollama-ai
-  #   expose:
-  #     - 11434
-  #   ports:
-  #     - "11434:11434"
-  #   deploy:
-  #       resources:
-  #           limits:
-  #             cpus: '2'
-  #             memory: 16G
-  #   volumes:
-  #     - ./dockervolumes/ollama:/root/.ollama
-  #     - .:/ollamascript
-  #   entrypoint: ["/usr/bin/bash", "/ollamascript/ollamascript.sh"]
-  #   networks:
-  #     - local-network
+
   postgresql-pgvector:
-      image: pgvector/pgvector:pg16
+      image: ankane/pgvector
       container_name: postgresql-pgvector
       env_file:
         - ".env"
       restart: always
       environment:
         - POSTGRES_DB=feedconveyor
-        - POSTGRES_USER=admin
+        - POSTGRES_USER=${POSTGRES_NAME}
         - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       volumes:
         - ./db:/var/lib/postgresql/data
       networks:
         - local-network
       ports:
-        - 8181:5432
+        - 5432:5432
         
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -74,3 +51,4 @@ services:
 networks:
   local-network:
     driver: bridge
+    
