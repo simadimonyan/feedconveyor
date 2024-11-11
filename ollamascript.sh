@@ -1,6 +1,14 @@
 #!/bin/bash
 
-# Function to download LLAMA3.1 model
+# Start Ollama in the background.
+/bin/ollama serve &
+# Record Process ID.
+pid=$!
+
+# Pause for Ollama to start.
+sleep 5
+
+# Function to download LLAMA3 model
 download_llama3() {
     echo "🔴 Retrieve LLAMA3 model..."
     /bin/ollama run llama3.1:70b
