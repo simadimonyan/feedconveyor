@@ -1,4 +1,14 @@
+schedule
+langgraph
+langchain
 aiogram
+SQLAlchemy
+asyncio
+psycopg
+psycopg-binary
 feedparser
 requests
 beautifulsoup4
+langchain-ollama
+langchain-postgres
+python-dotenv

@@ -1,47 +1,34 @@
-from bot import load_data_from_json
-
+from dotenv import load_dotenv
 import requests
 import json
+import os
 
-class AI():
+class AIDirectCall():
 
     def __init__(self):
-
-        config = load_data_from_json()
-        print(f"Config: {config}") 
-
-        self.smm_prompt = config["ai"]["SMM_PROMPT"]
+        load_dotenv(".env")
+        self.smm_prompt = os.getenv("SMM_PROMPT")
+        self.ollama_url = os.getenv("OLLAMA_GENERATE_URL")
 
     def generatePostText(self, text):
-
         system_prompt = self.smm_prompt
-        print(system_prompt)
-        print(text)
-
         try:
-
-            url = 'http://host.docker.internal:11434/api/generate'
+            url = self.ollama_url
             data = {
                 "model": "llama3",
-                "prompt": system_prompt + " " + text,
+                "prompt": f"{system_prompt} {text}",
                 "stream": False
             }
             response = requests.post(url, json=data)
-
             if response.status_code == 200:
-
                 response_text = response.text
                 data = json.loads(response_text)
                 actual_response = data["response"]
-                print(actual_response)
-
                 return str(actual_response)
-            
             return str(response["response"])
         
         except Exception as e:
-            text = str(e)
-            return "ai error:  " + text
+            return f"Error ocurred on llm processing model: {e}"
         
     
     

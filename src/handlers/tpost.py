@@ -1,10 +1,12 @@
+from parsers.habrnews import Habr
+from handlers.ai_utils import AIDirectCall
 from enum import Enum
 
-from fabrics.habrnews import Habr
-from fabrics.ai import AI
+ai = AIDirectCall()
 
 class PostType(Enum):
-    HABR_NEWS = 1
+    HABR_NEWS = 1,
+    AGENT_AI = 2
 
 class Post:
 
@@ -16,11 +18,9 @@ class Post:
         self.credentials = ""
 
     def createPost(self,type: PostType):
-
         match type:
             case PostType.HABR_NEWS:
                 (self.postLink, self.title, self.text) = Habr.getNews()
-                ai = AI()
                 self.text = ai.generatePostText(self.text)
                 self.credentials = f"""🌐 | {self.channel} | <a href="{self.postLink}">Источник 📢</a> """
 
