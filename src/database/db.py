@@ -4,19 +4,15 @@ from langchain_postgres import PGVector
 from langchain_core.documents import Document
 from dotenv import load_dotenv
 import os
-import json
 
 class Database:
 
     def __init__(self):
         load_dotenv(".env")
-        name = os.getenv("POSTGRES_NAME")
-        pwd = os.getenv("POSTGRES_PASSWORD")
         ollama_url = os.getenv("OLLAMA_BASE_URL")
         ollama_model = os.getenv("OLLAMA_MODEL")
         self.ollama = ChatOllama(model=ollama_model, base_url=ollama_url)
 
-        connection = f"postgresql+psycopg://{name}:{pwd}@postgresql-pgvector:5432/feedconveyor" 
         embeddings = OllamaEmbeddings(model=ollama_model, base_url=ollama_url)
         
         self.vector_database = PGVector(
@@ -24,9 +20,6 @@ class Database:
             connection=connection,
             embeddings=embeddings
         )
-        self.vector_database.create_vector_extension()
-        self.vector_database.create_tables_if_not_exists()
-
 
     async def store_data(self, data):
 

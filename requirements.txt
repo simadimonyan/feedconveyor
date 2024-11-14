@@ -10,5 +10,4 @@ feedparser
 requests
 beautifulsoup4
 langchain-ollama
-langchain-postgres
 python-dotenv

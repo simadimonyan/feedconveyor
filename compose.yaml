@@ -28,18 +28,11 @@ services:
         - POSTGRES_USER=${POSTGRES_NAME}
         - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       volumes:
-        - ./db:/var/lib/postgresql/data
-      networks:
-        - local-network
-      ports:
-        - 5432:5432
-        
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pgadmin
-    restart: always
-    env_file:
-      - ".env"
+      - index_data:/index_data
+    ports:
+      - "8000:8000"
+    networks:
+      - local-network
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
