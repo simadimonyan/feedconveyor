@@ -3,6 +3,8 @@ langgraph
 langchain
 aiogram
 SQLAlchemy
+chromadb
+langchain-chroma
 asyncio
 psycopg
 psycopg-binary

@@ -12,11 +12,13 @@ from database.db import Database
 from langchain_core.documents import Document
 import asyncio
 import logging
+import time
 import sys
 from parsers.habrnews import Habr
 
 
 from dotenv import load_dotenv
+from uuid import uuid4
 import os
 
 dp = Dispatcher()
@@ -97,11 +99,12 @@ async def post_handler(call: CallbackQuery) -> None:
     docs = [
             Document(
                 page_content=text,
-                metadata={"id": 1}
+                metadata = {"type": "news", "time": time.ctime(time.time())}
             )
         ]
+    ids = [str(uuid4())]
 
-    await db.store_data(docs)
+    db.store_data(docs, ids)
     await call.message.answer(f"done")
     
 

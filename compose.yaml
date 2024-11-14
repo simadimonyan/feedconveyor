@@ -13,33 +13,22 @@ services:
         - action: rebuild 
           path: requirements.txt
       depends_on:
-        - postgresql-pgvector
+        - chromadb
     networks:
       - local-network
 
-  postgresql-pgvector:
-      image: ankane/pgvector
-      container_name: postgresql-pgvector
-      env_file:
-        - ".env"
-      restart: always
-      environment:
-        - POSTGRES_DB=feedconveyor
-        - POSTGRES_USER=${POSTGRES_NAME}
-        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      volumes:
-      - index_data:/index_data
+  chromadb:
+    image: chromadb/chroma
+    container_name: chromadb
+    volumes:
+      - ./db/index_data:/index_data
     ports:
       - "8000:8000"
     networks:
       - local-network
     environment:
-      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
-      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
-    ports:
-      - 8080:80
-    networks:
-      - local-network
+      - CHROMA_SERVER_AUTH_PROVIDER=${CHROMA_SERVER_AUTHN_PROVIDER}
+      - CHROMA_SERVER_AUTH_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
 
 networks:
   local-network:

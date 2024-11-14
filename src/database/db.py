@@ -1,8 +1,8 @@
 from langchain_ollama import OllamaEmbeddings
 from langchain_ollama import ChatOllama
-from langchain_postgres import PGVector
-from langchain_core.documents import Document
+from langchain_chroma import Chroma
 from dotenv import load_dotenv
+import chromadb
 import os
 
 class Database:
@@ -13,29 +13,23 @@ class Database:
         ollama_model = os.getenv("OLLAMA_MODEL")
         self.ollama = ChatOllama(model=ollama_model, base_url=ollama_url)
 
+        persistent_client = chromadb.PersistentClient()
+        collection = persistent_client.get_or_create_collection("store")
         embeddings = OllamaEmbeddings(model=ollama_model, base_url=ollama_url)
-        
-        self.vector_database = PGVector(
-            collection_name="store",
-            connection=connection,
-            embeddings=embeddings
+
+        #TODO make direct connection as a client 
+
+        self.vector_store = Chroma(
+            client=persistent_client,
+            collection_name=collection.name,
+            embedding_function=embeddings
         )
 
-    async def store_data(self, data):
+    def store_data(self, data, ids):
+        self.vector_store.add_documents(documents=data, ids=ids)
 
-        for doc in data:
-            if not isinstance(doc.metadata, dict):
-                raise ValueError("Metadata must be a dictionary")
-        
-        self.vector_database.add_documents(data, ids=[doc.metadata["id"] for doc in data])
-
-    def search(self, search):
-        docs: dict[Document] = self.vector_database.similarity_search(search)
-
-        for doc in docs:
-            if not isinstance(doc.metadata, dict):
-                raise ValueError("Retrieved metadata must be a dictionary")
-
+    async def search(self, search):
+        docs = await self.vector_store.asimilarity_search(search)
         return docs
 
 
