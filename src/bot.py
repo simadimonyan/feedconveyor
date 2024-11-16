@@ -97,14 +97,12 @@ async def post_handler(call: CallbackQuery) -> None:
     postLink, title, text = Habr.getNews()
 
     docs = [
-            Document(
-                page_content=text,
-                metadata = {"type": "news", "time": time.ctime(time.time())}
-            )
+            text
         ]
+    metadatas = [{"type": "news", "time": time.ctime(time.time())}]
     ids = [str(uuid4())]
 
-    db.store_data(docs, ids)
+    await db.store_data(docs, metadatas, ids)
     await call.message.answer(f"done")
     
 

@@ -5,6 +5,7 @@ aiogram
 SQLAlchemy
 chromadb
 langchain-chroma
+langchain-community
 asyncio
 psycopg
 psycopg-binary
