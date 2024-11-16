@@ -10,5 +10,8 @@ feedparser
 requests
 beautifulsoup4
 langchain-ollama
-langchain-postgres
 python-dotenv
+langchain-milvus
+protobuf
+grpcio-tools
+pymilvus
