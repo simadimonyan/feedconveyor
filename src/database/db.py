@@ -12,9 +12,6 @@ class Database:
         ollama_url = os.getenv("OLLAMA_BASE_URL")
         ollama_model = os.getenv("OLLAMA_MODEL")
         self.ollama = ChatOllama(model=ollama_model, base_url=ollama_url)
-
-        persistent_client = chromadb.PersistentClient()
-        collection = persistent_client.get_or_create_collection("store")
         embeddings = OllamaEmbeddings(model=ollama_model, base_url=ollama_url)
 
         #TODO make direct connection as a client 
