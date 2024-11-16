@@ -11,3 +11,7 @@ requests
 beautifulsoup4
 langchain-ollama
 python-dotenv
+langchain-milvus
+protobuf
+grpcio-tools
+pymilvus
