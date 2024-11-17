@@ -52,7 +52,7 @@ class Database:
 
     async def store_data(self, data):
         vector = self.embeddings.embed_query(data)
-        await self.client.insert(
+        self.client.insert(
             collection_name="store",
             data={"vector": vector, "text": str(data)}
         )
