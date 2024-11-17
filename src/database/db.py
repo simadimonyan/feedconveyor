@@ -18,8 +18,8 @@ class Database:
         self.embeddings = OllamaEmbeddings(model=ollama_model, base_url=ollama_url)
 
         self.client = MilvusClient(
-                uri=server,
-                db_name="default"
+            uri=server,
+            db_name="default"
         )
 
         if not self.client.has_collection(collection_name="store"):
