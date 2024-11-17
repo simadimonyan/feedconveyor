@@ -15,7 +15,6 @@ import logging
 import sys
 from parsers.habrnews import Habr
 
-
 from dotenv import load_dotenv
 import os
 
@@ -94,14 +93,7 @@ async def post_handler(call: CallbackQuery) -> None:
 
     postLink, title, text = Habr.getNews()
 
-    docs = [
-            Document(
-                page_content=text,
-                metadata={"id": 1}
-            )
-        ]
-
-    await db.store_data(docs)
+    await db.store_data(text)
     await call.message.answer(f"done")
     
 
