@@ -7,4 +7,4 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 COPY . .
 
-CMD [ "python", "./src/bot.py" ]
+CMD ["python", "/src/database/settings.py"]

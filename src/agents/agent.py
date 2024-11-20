@@ -20,7 +20,7 @@ memory = MemorySaver() #checkpoint every node state
 def llm_call(state: MessagesState):
     return {"messages": [llm_with_tools.invoke(state["messages"])]}
 
-# Build graphа
+# Build graph
 builder = StateGraph(MessagesState)
 builder.add_node("llm_call", llm_call)
 builder.add_node("tools", ToolNode(tools.tools_list))

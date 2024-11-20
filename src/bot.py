@@ -9,7 +9,6 @@ from aiogram.types import CallbackQuery
 from aiogram import F
 from handlers.tpost import Post, PostType
 from database.db import Database
-from langchain_core.documents import Document
 import asyncio
 import logging
 import sys
@@ -53,7 +52,7 @@ async def post_handler(call: CallbackQuery) -> None:
         [InlineKeyboardButton(text=" Опубликовать ", callback_data="approve")]
     ]
     
-    try:
+    try:    
         post = Post()
         (link, text) = post.createPost(PostType.HABR_NEWS)
         print(text)
@@ -61,7 +60,10 @@ async def post_handler(call: CallbackQuery) -> None:
             url=link,
             prefer_large_media=True
         )
-        await call.answer('Генерация завершена', show_alert=False)
+        try: 
+            await call.answer('Генерация завершена', show_alert=False) 
+        except: 
+            await call.message.answer('Генерация завершена', show_alert=False) 
         await call.message.edit_text(text, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb),
                                   link_preview_options=preview)
     except Exception as e:

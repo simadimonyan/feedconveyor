@@ -68,6 +68,7 @@ services:
       MILVUS_USER: ${MILVUS_USER}
       MILVUS_PASSWORD: ${MILVUS_PASSWORD}
     volumes:
+      - ./milvus.yaml:/milvus/configs/milvus.yaml
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/milvus:/var/lib/milvus
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]

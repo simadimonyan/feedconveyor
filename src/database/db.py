@@ -2,7 +2,6 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_ollama import ChatOllama
 from dotenv import load_dotenv
 from pymilvus import CollectionSchema, DataType, FieldSchema, MilvusClient
-import logging
 import os
 
 class Database:
@@ -10,7 +9,6 @@ class Database:
     def __init__(self):
         load_dotenv(".env")
         server = os.getenv("MILVUS_HOST")
-        name = os.getenv("MILVUS_USER")
         pwd = os.getenv("MILVUS_PASSWORD")
         ollama_url = os.getenv("OLLAMA_BASE_URL")
         ollama_model = os.getenv("OLLAMA_MODEL")
@@ -19,14 +17,16 @@ class Database:
 
         self.client = MilvusClient(
             uri=server,
-            db_name="default"
+            db_name="default",
+            user="root",
+            password=pwd
         )
 
         if not self.client.has_collection(collection_name="store"):
             fields = [
                 FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True, description="Primary key"),
                 FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=4096, description="Ollama embeddings"),  
-                FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=5000, description="Original document content")
+                FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535, description="Original document content")
             ]
             schema = CollectionSchema(fields, description="LangChain-compatible Milvus collection for Ollama embeddings")
 
