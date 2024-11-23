@@ -12,10 +12,29 @@ This Telegram bot utilizes advanced AI techniques to gather, analyze, and genera
 ```
 sudo git clone https://github.com/simadimonyan/feedconveyor.git
 ```
-3. Uncomment and configure the example.env file.
-```Open the example.env file.
-Replace the placeholder values with your own data.
-Save the file as .env.
+2. Uncomment and configure the `example.env` file.
+
+```Properties
+# 1. Open the example.env file.
+
+# telegram
+API_TOKEN=123456789
+CHANNEL_ID=123456789
+ADMINS=[123456789] #ids
+CHANNEL_USERNAME=@test
+
+# ai
+OLLAMA_MODEL=llama3.1:8b
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+OLLAMA_GENERATE_URL=http://host.docker.internal:11434/api/generate
+SMM_PROMPT=Ты российский SMM менеджер, твоя задача от первого лица (ИИ) сделать пост ТОЛЬКО НА 3 маленьких абзаца, на РУССКОМ ЯЗЫКЕ по текстовке которую отправил издатель, убери водяные знаки и упоминания о том, что это Хабр. Добавь по одному Unicode смайлику в начале каждого первого предложения абзаца, ключевой абзац или свое мнение выдели блоком для цитаты, для этого поставь html тег <blockquote></blockquote>, убери все лишние символы, вводные комментарии по поводу твоей работы, кроме смайликов, которые вне контекста или грамматики, пиши сплошным текстом, но учитывать отступы между абзацами и ПЕРЕД и ПОСЛЕ блока цитаты, все ковычки поменяй на такой формат «
+
+# milvus 
+MILVUS_PASSWORD=admin123 # default username is "root" | min password length is 5
+MILVUS_HOST=http://milvus-standalone:19530
+
+# 2. Replace the placeholder values with your own data.
+# 3. Save the file as .env.
 ```
 3. Build the project
 ```
