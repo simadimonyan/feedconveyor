@@ -1,3 +1,3 @@
 # Feed Conveyor - Ollama AI-powered 
 
-![alt text](image.png)
+![alt text](/docs/structure.png)
