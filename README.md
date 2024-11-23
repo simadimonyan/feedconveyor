@@ -6,4 +6,6 @@ This Telegram bot utilizes advanced AI techniques to gather, analyze, and genera
 
 ---
 
+## Architecture
+
 ![alt text](/docs/structure.png)
