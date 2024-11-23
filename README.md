@@ -8,7 +8,17 @@ This Telegram bot utilizes advanced AI techniques to gather, analyze, and genera
 
 ## Installation 
 
-```Bash
+1. Clone the repository.
+```
+sudo git clone https://github.com/simadimonyan/feedconveyor.git
+```
+3. Uncomment and configure the example.env file.
+```Open the example.env file.
+Replace the placeholder values with your own data.
+Save the file as .env.
+```
+3. Build the project
+```
 sudo bash feedconveyor.sh
 ```
 
