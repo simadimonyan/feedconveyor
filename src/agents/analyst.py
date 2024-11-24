@@ -7,7 +7,6 @@ from langchain_ollama import ChatOllama
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_community.tools import DuckDuckGoSearchResults
-from langchain.tools.playwright import NavigateTool, ExtractTextTool
 from pydantic import BaseModel
 import requests
 from typing_extensions import TypedDict
