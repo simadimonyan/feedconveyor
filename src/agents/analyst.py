@@ -1,6 +1,6 @@
 import json
 import operator
-from typing import Annotated, Any, List
+from typing import Annotated, List
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from langchain_ollama import ChatOllama
