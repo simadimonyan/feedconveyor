@@ -17,5 +17,7 @@ def news_database():
     db = Database()
     return db.search("News for the last 24h")
 
-# list of tools
-tools_list = [news_database]
+# AGENT TOOLS SET
+editor = [news_database]
+analyst = []
+expert = []

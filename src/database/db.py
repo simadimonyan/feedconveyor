@@ -26,6 +26,9 @@ class Database:
             fields = [
                 FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True, description="Primary key"),
                 FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=4096, description="Ollama embeddings"),  
+                FieldSchema(name="date", dtype=DataType.VARCHAR, max_length=1000, description="Document date"),
+                FieldSchema(name="title", dtype=DataType.VARCHAR, max_length=1000, description="Document title"),
+                FieldSchema(name="source_link", dtype=DataType.VARCHAR, max_length=1000, description="Document link"),
                 FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535, description="Original document content")
             ]
             schema = CollectionSchema(fields, description="LangChain-compatible Milvus collection for Ollama embeddings")
@@ -51,10 +54,13 @@ class Database:
         self.client.load_collection("store")
 
     async def store_data(self, data):
-        vector = self.embeddings.embed_query(data)
+        content = f"date: {data["date"]}, title: {data["title"]}, \
+              source_link: {data["source_link"]}, text: {data["text"]}"
+        vector = self.embeddings.embed_query(content)
         self.client.insert(
             collection_name="store",
-            data={"vector": vector, "text": str(data)}
+            data={"vector": vector, "date": str(data["date"]), "title": str(data["title"]), \
+                   "source_link": str(data["source_link"]), "text": str(data["text"])}
         )
 
     def search(self, search):
@@ -62,6 +68,6 @@ class Database:
             collection_name="store",
             data=[self.embeddings.embed_query(search)],
             limit=3,
-            output_fields=["text"]
+            output_fields=["date", "title", "source_link", "text"]
         )
 

@@ -14,3 +14,5 @@ python-dotenv
 protobuf
 grpcio-tools
 pymilvus
+duckduckgo-search
+langchain-community

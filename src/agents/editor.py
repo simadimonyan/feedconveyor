@@ -13,7 +13,7 @@ ollama_url = os.getenv("OLLAMA_BASE_URL")
 ollama_model = os.getenv("OLLAMA_MODEL")
 
 llm = ChatOllama(model=ollama_model, base_url=ollama_url)
-llm_with_tools = llm.bind_tools(tools.tools_list)
+llm_with_tools = llm.bind_tools(tools.editor)
 memory = MemorySaver() #checkpoint every node state
 
 # Node
@@ -23,7 +23,7 @@ def llm_call(state: MessagesState):
 # Build graph
 builder = StateGraph(MessagesState)
 builder.add_node("llm_call", llm_call)
-builder.add_node("tools", ToolNode(tools.tools_list))
+builder.add_node("tools", ToolNode(tools.editor))
 
 builder.add_edge(START, "llm_call")
 builder.add_conditional_edges("llm_call", tools_condition)

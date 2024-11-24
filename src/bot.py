@@ -15,6 +15,7 @@ import sys
 from parsers.habrnews import Habr
 
 from dotenv import load_dotenv
+import time
 import os
 
 dp = Dispatcher()
@@ -94,8 +95,11 @@ async def post_handler(call: CallbackQuery) -> None:
     db = Database()
 
     postLink, title, text = Habr.getNews()
+    date = time.ctime(time.time())
 
-    await db.store_data(text)
+    data = {"date": date, "title": title, "source_link": postLink, "text": text}
+
+    await db.store_data(data)
     await call.message.answer(f"done")
     
 
