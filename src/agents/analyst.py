@@ -11,7 +11,6 @@ from pydantic import BaseModel
 import requests
 from typing_extensions import TypedDict
 import time 
-import logging
 import os
 
 from src.database.db import Database
