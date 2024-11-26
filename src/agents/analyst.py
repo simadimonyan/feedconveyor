@@ -13,6 +13,7 @@ from typing_extensions import TypedDict
 import time 
 import os
 
+from parsers.tgstat import TGStat
 from src.database.db import Database
 
 load_dotenv(".env")
@@ -33,6 +34,7 @@ class News(BaseModel):
 class Trends(TypedDict):
     trends: List[News]
 
+
 class Content(TypedDict):
     target_audience: str
     analitics: Annotated[List[Trends], operator.add]
@@ -40,9 +42,6 @@ class Content(TypedDict):
     prompt: str
 
 # DATA COLLECTION NODES
-
-def news_search(state: Content):
-    pass
 
 def web_search(state: Content):
     prompt_template = f"""
@@ -143,9 +142,84 @@ def rag_search(state: Content):
 
 # DATA PROCESSING NODES 
 
-def summarize(state: Trends) -> Content:
+def summarize(state: Content):
+    buttons = TGStat.get_categories()
+    filters = TGStat.get_filters()
 
-    pass
+    prompt = f"""
+        We have information about the buttons on a webpage and the 
+        target audience with specific interests. We need to select one
+        of the buttons that corresponds to the target audience's interests 
+        and then provide Selenium selectors for clicking that button.
+        {buttons} {filters}
+
+        Target Audience: {state['target_audience']}
+
+        Here is a list of buttons:
+        1. Text: "By Views", Link: "/ratings/posts/pt?sort=views"
+        2. Text: "By Forwards", Link: "/ratings/posts/pt?sort=forwards"
+        3. Text: "By Comments", Link: "/ratings/posts/pt?sort=comments"
+        4. Text: "By Channel Reposts", Link: "/ratings/posts/pt?sort=quotes"
+        5. Text: "By Reactions", Link: "/ratings/posts/pt?sort=reactions"
+
+        Task:
+        - Generate URL that best matches the target audience's interests for 5 types the list of buttons 
+        
+        The response should contain just only url lines for parsing:
+        URL https path for your target audience category 
+    """
+
+    response = analyst.invoke(prompt)
+    lines_array = response.content.splitlines()
+    
+    stats = []
+    for url in lines_array:
+        page = BeautifulSoup(url, 'html.parser')
+        stats.append(page)
+
+    prompt = f"""
+        You have an object with trends, and statistics from other Telegram channels.
+        Your task is to select the 3 most popular news items from the trends by analysing statistics. 
+        Each news item should be returned in the format of News, which includes:
+            1.	title — the title of the news.
+            2.	date — the date of the news in YYYY-MM-DD HH:MM:SS format.
+            3.	text — a brief description of the news or a summary.
+            4.	link — the URL or source link to the news article.
+
+        Trends: {state['analitics']}
+
+        Analitics: {stats}
+
+        Your task is to extract each news item into the following JSON format:
+        - title: (string)
+        - date: (string)
+        - text: (string)
+        - link: (string)
+
+        Answer as a code with the result as a JSON syntax-only (but as a plaintext) array without any other words.
+        DO NOT TYPE ```json ``` 
+    """
+
+    generated_response = analyst.invoke(prompt) 
+
+    news_items = json.loads(str(generated_response.content))
+
+    parsed_news = []
+    for item in news_items:
+        news = News(
+            title=item["title"],
+            date=item["date"],
+            text=item["text"],
+            link=item["link"]
+        )
+        parsed_news.append(news)
+
+    trends = Trends(trends=parsed_news)
+    
+    state["analitics"] = [trends]
+    state["target_audience"] = state["target_audience"]
+
+    return state
 
 def generate_topic(state: Content):
     pass
@@ -157,14 +231,12 @@ def build_prompt(state: Content):
 # GRAPH
 
 builder = StateGraph(Content)
-builder.add_node("news_search", news_search)
 builder.add_node("web_search", web_search)
 builder.add_node("rag_search", rag_search)
 builder.add_node("summarize", summarize)
 builder.add_node("generate_topic", generate_topic)
 builder.add_node("build_prompt", build_prompt)
 
-builder.add_edge(START, "news_search")
 builder.add_edge(START, "web_search")
 builder.add_edge(START, "rag_search")
 builder.add_edge("news_search", "summarize")
