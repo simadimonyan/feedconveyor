@@ -49,7 +49,7 @@ sudo docker compose up
 ## Requirements
 
 1. Docker 
-2. ![Developer Account & API key](https://developers.sber.ru)
+2. [Developer Account & API key](https://developers.sber.ru)
 
 
 
