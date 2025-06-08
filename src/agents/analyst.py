@@ -2,8 +2,9 @@ import json
 import operator
 from typing import Annotated, List
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
-from langchain_ollama import ChatOllama
+
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_gigachat.chat_models import GigaChat
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_community.tools import DuckDuckGoSearchResults
@@ -11,16 +12,11 @@ from pydantic import BaseModel
 import requests
 from typing_extensions import TypedDict
 import time 
-import os
 
-from parsers.tgstat import TGStat
+from src.utills.parsers.tgstat import TGStat
 from src.database.db import Database
+from src.agents.workflow import analyst
 
-load_dotenv(".env")
-ollama_url = os.getenv("OLLAMA_BASE_URL")
-ollama_model = os.getenv("OLLAMA_MODEL")
-
-analyst = ChatOllama(model=ollama_model, base_url=ollama_url)
 memory = MemorySaver() # checkpoint every node state
 
 # SCHEMAS
@@ -58,13 +54,19 @@ def web_search(state: Content):
             •	Common questions or discussions happening online.
             •	Innovative ideas or products targeting the audience.
 
-        Answer just a list of 2 items of plaintext only without nums or anything else not related to querry.
+        Answer just a list of 2 items of plaintext only without nummers like (1. 2.) or anything else not related to querry - JUST CLEAR TEXT in lowercase.
         DO NOT TYPE "Here are the search queries for DuckDuckGo:" or something like that
+
+        Example:
+
+        querry1
+        querry2
     """
 
-    generated_response = analyst.invoke(prompt_template) 
+    generated_response = analyst.invoke({ "messages": [HumanMessage(content=prompt_template)]})
     search = DuckDuckGoSearchResults(output_format="list")
-    lines_array = generated_response.content.splitlines()
+    response_text = generated_response["messages"][1].content
+    lines_array = response_text.splitlines()
     news_trends = []
 
     for item in lines_array:
@@ -92,7 +94,7 @@ def web_search(state: Content):
 
     state["target_audience"] = state["target_audience"]
     
-    return 
+    return state
 
 
 def rag_search(state: Content):
@@ -142,7 +144,7 @@ def rag_search(state: Content):
 
 # DATA PROCESSING NODES 
 
-def summarize(state: Content):
+def tganalytics(state: Content):
     buttons = TGStat.get_categories()
     filters = TGStat.get_filters()
 
@@ -186,6 +188,8 @@ def summarize(state: Content):
             3.	text — a brief description of the news or a summary.
             4.	link — the URL or source link to the news article.
 
+        Target Audience: {state['target_audience']}    
+
         Trends: {state['analitics']}
 
         Analitics: {stats}
@@ -221,6 +225,9 @@ def summarize(state: Content):
 
     return state
 
+def summarize(state: Content):
+    pass
+
 def generate_topic(state: Content):
     pass
 
@@ -232,16 +239,17 @@ def build_prompt(state: Content):
 
 builder = StateGraph(Content)
 builder.add_node("web_search", web_search)
-builder.add_node("rag_search", rag_search)
+#builder.add_node("rag_search", rag_search)
+builder.add_node("tganalytics", tganalytics)
 builder.add_node("summarize", summarize)
 builder.add_node("generate_topic", generate_topic)
 builder.add_node("build_prompt", build_prompt)
 
 builder.add_edge(START, "web_search")
-builder.add_edge(START, "rag_search")
-builder.add_edge("news_search", "summarize")
+#builder.add_edge(START, "rag_search")
+#builder.add_edge("news_search", "summarize")
 builder.add_edge("web_search", "summarize")
-builder.add_edge("rag_search", "summarize")
+#builder.add_edge("rag_search", "summarize")
 builder.add_edge("summarize", "generate_topic")
 builder.add_edge("generate_topic", "build_prompt")
 builder.add_edge("build_prompt", END)

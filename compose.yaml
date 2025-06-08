@@ -12,13 +12,11 @@ services:
             - node_modules/
         - action: rebuild 
           path: requirements.txt
-      depends_on:
-        - milvus
     networks:
       - local-network
 
   etcd:
-    container_name: milvus-etcd
+    container_name: etcd
     image: quay.io/coreos/etcd:v3.5.5
     environment:
       - ETCD_AUTO_COMPACTION_MODE=revision
@@ -37,7 +35,7 @@ services:
       - local-network
 
   minio:
-    container_name: milvus-minio
+    container_name: minio
     image: minio/minio:RELEASE.2023-03-20T20-16-18Z
     environment:
       MINIO_ACCESS_KEY: minioadmin

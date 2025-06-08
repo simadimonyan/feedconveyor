@@ -1,5 +1,5 @@
 from src.database.db import Database
-from src.parsers.habrnews import Habr
+from src.utills.parsers.habrnews import Habr
 from langchain.agents import tool
 
 @tool
@@ -18,6 +18,6 @@ def news_database():
     return db.search("News for the last 24h")
 
 # AGENT TOOLS SET
-editor = [news_database]
-analyst = []
-expert = []
+editor_tools = [news_database]
+analyst_tools = []
+expert_tools = []

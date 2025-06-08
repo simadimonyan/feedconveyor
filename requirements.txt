@@ -9,10 +9,11 @@ psycopg-binary
 feedparser
 requests
 beautifulsoup4
-langchain-ollama
 python-dotenv
 protobuf
 grpcio-tools
 pymilvus
 duckduckgo-search
 langchain-community
+langchain-gigachat
+langgraph-supervisor

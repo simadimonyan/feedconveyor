@@ -12,7 +12,8 @@ from database.db import Database
 import asyncio
 import logging
 import sys
-from parsers.habrnews import Habr
+
+from utills.parsers.habrnews import Habr
 
 from dotenv import load_dotenv
 import time

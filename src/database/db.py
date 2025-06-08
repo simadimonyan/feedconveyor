@@ -1,5 +1,5 @@
-from langchain_ollama import OllamaEmbeddings
-from langchain_ollama import ChatOllama
+from langchain_gigachat.chat_models import GigaChat
+from langchain_gigachat.embeddings.gigachat import GigaChatEmbeddings
 from dotenv import load_dotenv
 from pymilvus import CollectionSchema, DataType, FieldSchema, MilvusClient
 import os
@@ -10,10 +10,19 @@ class Database:
         load_dotenv(".env")
         server = os.getenv("MILVUS_HOST")
         pwd = os.getenv("MILVUS_PASSWORD")
-        ollama_url = os.getenv("OLLAMA_BASE_URL")
-        ollama_model = os.getenv("OLLAMA_MODEL")
-        self.ollama = ChatOllama(model=ollama_model, base_url=ollama_url)
-        self.embeddings = OllamaEmbeddings(model=ollama_model, base_url=ollama_url)
+        giga_key = os.getenv("GIGACHAT_API_KEY")
+        giga_model = os.getenv("GIGACHAT_MODEL")
+        self.giga = GigaChat(
+            credentials=giga_key,
+            model=giga_model,
+            scope="GIGACHAT_API_PERS",
+            verify_ssl_certs=False,
+        )
+        self.embeddings=GigaChatEmbeddings(
+            credentials=giga_key,
+            scope="GIGACHAT_API_PERS",
+            verify_ssl_certs=False,
+        )
 
         self.client = MilvusClient(
             uri=server,
