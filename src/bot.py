@@ -13,7 +13,7 @@ import asyncio
 import logging
 import sys
 
-from utills.parsers.habrnews import Habr
+from utills.parsers.web.habr import Habr
 
 from dotenv import load_dotenv
 import time

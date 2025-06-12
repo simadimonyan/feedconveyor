@@ -1,41 +1,21 @@
 import json
-import operator
-from typing import Annotated, List
 from bs4 import BeautifulSoup
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_gigachat.chat_models import GigaChat
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.prebuilt import ToolNode
 from langchain_community.tools import DuckDuckGoSearchResults
-from pydantic import BaseModel
 import requests
-from typing_extensions import TypedDict
-import time 
+import time
 
-from src.utills.parsers.tgstat import TGStat
+
+from src.utills.parsers.analitics.tgstat import TGStat
 from src.database.db import Database
 from src.agents.workflow import analyst
+from src.domain.analitics import News, Trends, Content
 
 memory = MemorySaver() # checkpoint every node state
-
-# SCHEMAS
-
-class News(BaseModel):
-    title: str
-    date: str
-    text: str
-    link: str
-
-class Trends(TypedDict):
-    trends: List[News]
-
-
-class Content(TypedDict):
-    target_audience: str
-    analitics: Annotated[List[Trends], operator.add]
-    post_topic: str
-    prompt: str
 
 # DATA COLLECTION NODES
 
@@ -43,7 +23,8 @@ def web_search(state: Content):
     prompt_template = f"""
         Your task is to generate search queries for DuckDuckGo to find the latest and most relevant 
         information about a target audience for creating a Telegram post. Each query should be specific, 
-        designed to uncover trends, news, or discussions related to the audience’s interests, behavior, or needs.
+        designed to uncover trends, news, or discussions related to the audience’s interests, behavior, or needs. 
+        Language must be in target audience querry like.
 
         Here are the parameters for the task:
             •	Target Audience Description: {state["target_audience"]}
@@ -95,52 +76,6 @@ def web_search(state: Content):
     state["target_audience"] = state["target_audience"]
     
     return state
-
-
-def rag_search(state: Content):
-    db = Database()
-    response = db.search(f"Find related news about {state['target_audience']} for the last 24h - now is {time.ctime(time.time())}")
-    
-    prompt_template = """
-        Here is a list of news items in the format "title | date | text | link":
-        {data}
-
-        Your task is to extract each news item into the following JSON format:
-        - title: (string)
-        - date: (string)
-        - text: (string)
-        - link: (string)
-
-        Answer as a code with the result as a JSON syntax-only (but as a plaintext) array without any other words.
-        DO NOT TYPE ```json ``` 
-    """
-
-    prompt = prompt_template.format(data=response) 
-    generated_response = analyst.invoke(prompt) 
-
-    news_items = json.loads(str(generated_response.content))
-
-    parsed_news = []
-    for item in news_items:
-        news = News(
-            title=item["title"],
-            date=item["date"],
-            text=item["text"],
-            link=item["link"]
-        )
-        parsed_news.append(news)
-
-    trends = Trends(trends=parsed_news)
-    
-    if "analitics" in state and state["analitics"] is not None:
-        state["analitics"].append(trends)
-    else:
-        state["analitics"] = [trends]
-
-    state["target_audience"] = state["target_audience"]
-
-    return state
-
 
 # DATA PROCESSING NODES 
 
@@ -225,33 +160,59 @@ def tganalytics(state: Content):
 
     return state
 
-def summarize(state: Content):
-    pass
-
 def generate_topic(state: Content):
-    pass
+    
+    prompt = f"""
+        You are an expert in creating engaging and relevant topics for Telegram posts.
+        Your task is to generate a topic based on the target audience and the trends gathered from the analysis.
+
+        Target Audience: {state['target_audience']}
+        Trends: {state['analitics']}
+
+        Generate a concise and appealing topic that would attract the target audience's attention.
+        The topic should be relevant to the trends and interests of the audience.
+
+        Answer just a single line of plaintext with the topic.
+    """
+    generated_response = analyst.invoke({ "messages": [HumanMessage(content=prompt)]})
+    topic = generated_response["messages"][1].content.strip()
+    state["post_topic"] = topic
+
+    return state
+
+def summarize(state: Content):
+
+    prompt = f"""
+        You are an expert in summarizing content for Telegram posts.
+        If you need extra context use tools.
+        Your task is to create a concise summary based on the trends and the topic generated.
+        Topic: {state['post_topic']}
+        Target Audience: {state['target_audience']}
+        Trends: {state['analitics']}
+    """
+    generated_response = analyst.invoke({ "messages": [HumanMessage(content=prompt)]})
+    summary = generated_response["messages"][1].content.strip()
+    state["summary"] = summary
+
+    return state
 
 def build_prompt(state: Content):
     pass
-
 
 # GRAPH
 
 builder = StateGraph(Content)
 builder.add_node("web_search", web_search)
-#builder.add_node("rag_search", rag_search)
 builder.add_node("tganalytics", tganalytics)
 builder.add_node("summarize", summarize)
 builder.add_node("generate_topic", generate_topic)
 builder.add_node("build_prompt", build_prompt)
 
 builder.add_edge(START, "web_search")
-#builder.add_edge(START, "rag_search")
-#builder.add_edge("news_search", "summarize")
-builder.add_edge("web_search", "summarize")
-#builder.add_edge("rag_search", "summarize")
-builder.add_edge("summarize", "generate_topic")
-builder.add_edge("generate_topic", "build_prompt")
+#builder.add_edge("tganalytics", "web_search")
+builder.add_edge("web_search", "generate_topic")
+builder.add_edge("generate_topic", "summarize")
+builder.add_edge("summarize", "build_prompt")
 builder.add_edge("build_prompt", END)
 
 graph = builder.compile(memory)

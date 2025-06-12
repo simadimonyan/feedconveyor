@@ -1,5 +1,5 @@
-from parsers.habrnews import Habr
-from handlers.ai_utils import AIDirectCall
+from utills.parsers.web.habr import Habr
+from utills.handlers.ai import AIDirectCall
 from enum import Enum
 
 ai = AIDirectCall()
