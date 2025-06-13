@@ -1,19 +1,16 @@
-import json
-from bs4 import BeautifulSoup
-
-from langchain_core.messages import HumanMessage, SystemMessage
-from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import ToolNode
 from langchain_community.tools import DuckDuckGoSearchResults
-import requests
-import time
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import StateGraph, START, END
+from langchain_core.messages import HumanMessage
 
-
-from src.utills.parsers.analitics.tgstat import TGStat
-from src.database.db import Database
-from src.agents.workflow import analyst
 from src.domain.analitics import News, Trends, Content
+from src.utills.parsers.analitics.tgstat import TGStat
+from src.agents.workflow import analyst
+
+from bs4 import BeautifulSoup
+import requests
+import json
+import time
 
 memory = MemorySaver() # checkpoint every node state
 
@@ -163,7 +160,7 @@ def tganalytics(state: Content):
 def generate_topic(state: Content):
     
     prompt = f"""
-        You are an expert in creating engaging and relevant topics for Telegram posts.
+        You are an analyst expert in creating engaging and relevant topics for Telegram posts.
         Your task is to generate a topic based on the target audience and the trends gathered from the analysis.
 
         Target Audience: {state['target_audience']}
@@ -183,7 +180,7 @@ def generate_topic(state: Content):
 def summarize(state: Content):
 
     prompt = f"""
-        You are an expert in summarizing content for Telegram posts.
+        You are an analyst expert in summarizing content for Telegram posts.
         If you need extra context use tools.
         Your task is to create a concise summary based on the trends and the topic generated.
         Topic: {state['post_topic']}
