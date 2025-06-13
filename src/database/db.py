@@ -1,7 +1,7 @@
-from langchain_gigachat.chat_models import GigaChat
-from langchain_gigachat.embeddings.gigachat import GigaChatEmbeddings
 from dotenv import load_dotenv
 from pymilvus import CollectionSchema, DataType, FieldSchema, MilvusClient
+from yandex_chain import YandexLLM, YandexEmbeddings
+from yandex_chain.YandexGPT import YandexGPTModel
 import os
 
 class Database:
@@ -10,18 +10,19 @@ class Database:
         load_dotenv(".env")
         server = os.getenv("MILVUS_HOST")
         pwd = os.getenv("MILVUS_PASSWORD")
-        giga_key = os.getenv("GIGACHAT_API_KEY")
-        giga_model = os.getenv("GIGACHAT_MODEL")
-        self.giga = GigaChat(
-            credentials=giga_key,
-            model=giga_model,
-            scope="GIGACHAT_API_PERS",
-            verify_ssl_certs=False,
+        yandex_key = os.getenv("YANDEXGPT_API_KEY")
+        yandex_model = os.getenv("YANDEXGPT_MODEL")
+        yandex_folder = os.getenv("YANDEXGPT_FOLDER_ID")
+
+        self.yandex = YandexLLM(
+            folder_id=yandex_folder,
+            api_key=yandex_key,
+            model=YandexGPTModel(int(yandex_model))
         )
-        self.embeddings=GigaChatEmbeddings(
-            credentials=giga_key,
-            scope="GIGACHAT_API_PERS",
-            verify_ssl_certs=False,
+        self.embeddings=YandexEmbeddings(
+            folder_id=yandex_folder,
+            api_key=yandex_key,
+            model=yandex_model
         )
 
         self.client = MilvusClient(

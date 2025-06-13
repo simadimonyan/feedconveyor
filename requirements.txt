@@ -15,5 +15,4 @@ grpcio-tools
 pymilvus
 duckduckgo-search
 langchain-community
-langchain-gigachat
 langgraph-supervisor
