@@ -1,6 +1,6 @@
 from langchain_gigachat.chat_models import GigaChat
 from langgraph_supervisor import create_supervisor
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_react_agent
 from dotenv import load_dotenv
 from src.agents.tools import analyst_tools, editor_tools
 import os
@@ -24,21 +24,19 @@ model = GigaChat(
 )
 
 analyst = create_react_agent(
-    model=model,
+    llm=model,
     tools=analyst_tools,
-    name="Analyst",
     prompt=analyst_prompt
 )
 
 editor = create_react_agent(
-    model=model,
-    tools=editor_tools, 
-    name="Editor",
+    llm=model,
+    tools=editor_tools,
     prompt=editor_prompt
 )
 
 supervisor = create_supervisor(
-    [analyst],
+    agents=[analyst],
     model=model,
     prompt=supervisor_prompt
 )

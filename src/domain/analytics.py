@@ -16,7 +16,7 @@ class Trends(TypedDict):
 
 class Content(TypedDict):
     target_audience: str
-    analitics: Annotated[List[Trends], operator.add]
+    analytics: Annotated[List[Trends], operator.add]
     post_topic: str
     prompt: str
     summary: str

@@ -3,7 +3,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph, START, END
 from langchain_core.messages import HumanMessage
 
-from src.domain.analitics import News, Trends, Content
+from src.domain.analytics import News, Trends, Content
 from src.utills.parsers.analitics.tgstat import TGStat
 from src.agents.workflow import analyst
 
@@ -32,7 +32,7 @@ def web_search(state: Content):
             •	Common questions or discussions happening online.
             •	Innovative ideas or products targeting the audience.
 
-        Answer just a list of 2 items of plaintext only without nummers like (1. 2.) or anything else not related to querry - JUST CLEAR TEXT in lowercase.
+        Answer just a list of 1 items of plaintext only without nummers like (1. 2.) or anything else not related to querry - JUST CLEAR TEXT in lowercase.
         DO NOT TYPE "Here are the search queries for DuckDuckGo:" or something like that
 
         Example:
@@ -65,10 +65,10 @@ def web_search(state: Content):
         
     trends = Trends(trends=news_trends)
 
-    if "analitics" in state and state["analitics"] is not None:
-        state["analitics"].append(trends)
+    if "analytics" in state and state["analytics"] is not None:
+        state["analytics"].append(trends)
     else:
-        state["analitics"] = [trends]
+        state["analytics"] = [trends]
 
     state["target_audience"] = state["target_audience"]
     
@@ -122,9 +122,9 @@ def tganalytics(state: Content):
 
         Target Audience: {state['target_audience']}    
 
-        Trends: {state['analitics']}
+        Trends: {state['analytics']}
 
-        Analitics: {stats}
+        Analytics: {stats}
 
         Your task is to extract each news item into the following JSON format:
         - title: (string)
@@ -152,7 +152,7 @@ def tganalytics(state: Content):
 
     trends = Trends(trends=parsed_news)
     
-    state["analitics"] = [trends]
+    state["analytics"] = [trends]
     state["target_audience"] = state["target_audience"]
 
     return state
@@ -164,7 +164,7 @@ def generate_topic(state: Content):
         Your task is to generate a topic based on the target audience and the trends gathered from the analysis.
 
         Target Audience: {state['target_audience']}
-        Trends: {state['analitics']}
+        Trends: {state['analytics']}
 
         Generate a concise and appealing topic that would attract the target audience's attention.
         The topic should be relevant to the trends and interests of the audience.
@@ -185,7 +185,7 @@ def summarize(state: Content):
         Your task is to create a concise summary based on the trends and the topic generated.
         Topic: {state['post_topic']}
         Target Audience: {state['target_audience']}
-        Trends: {state['analitics']}
+        Trends: {state['analytics']}
     """
     generated_response = analyst.invoke({ "messages": [HumanMessage(content=prompt)]})
     summary = generated_response["messages"][1].content.strip()
