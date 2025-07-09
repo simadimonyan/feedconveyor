@@ -1,10 +1,8 @@
 from dotenv import load_dotenv
-import requests
-import json
 from langchain_gigachat.chat_models import GigaChat
 import os
 
-class AIDirectCall():
+class AIDirectCall:
 
     def __init__(self):
         load_dotenv(".env")

@@ -1,9 +1,10 @@
+name: feed-conveyor
 services:
   bot:
     build:
       context: .
     container_name: telegram-bot
-    develop:
+    x-develop:
       watch:
         - action: sync
           path: ./src
@@ -94,4 +95,3 @@ services:
 networks:
   local-network:
     driver: bridge
-    

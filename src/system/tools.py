@@ -1,5 +1,5 @@
 from src.database.db import Database
-from src.utills.parsers.web.habr import Habr
+from src.bot.utills.parsers.web.habr import getNews
 from langchain.agents import tool
 
 @tool
@@ -7,7 +7,7 @@ def habr():
     """
     - Returns the last IT news article on Habr
     """
-    return Habr.getNews()
+    return getNews()
 
 
 

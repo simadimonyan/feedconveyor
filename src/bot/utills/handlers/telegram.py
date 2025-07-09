@@ -1,5 +1,5 @@
-from src.utills.parsers.web.habr import Habr
-from src.utills.handlers.ai import AIDirectCall
+from src.bot.utills.parsers.web.habr import getNews
+from src.bot.utills.handlers.ai import AIDirectCall
 from enum import Enum
 
 ai = AIDirectCall()
@@ -20,7 +20,7 @@ class Post:
     def createPost(self,type: PostType):
         match type:
             case PostType.HABR_NEWS:
-                (self.postLink, self.title, self.text) = Habr.getNews()
+                (self.postLink, self.title, self.text) = getNews()
                 self.text = ai.generatePostText(self.text)
                 self.credentials = f"""🌐 | {self.channel} | <a href="{self.postLink}">Источник 📢</a> """
 

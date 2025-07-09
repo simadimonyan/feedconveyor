@@ -7,16 +7,14 @@ from aiogram.filters import Command
 from aiogram.types import LinkPreviewOptions
 from aiogram.types import CallbackQuery
 from aiogram import F
-from handlers.tpost import Post, PostType
-from database.db import Database
+from src.bot.utills.handlers.telegram import Post, PostType
 import asyncio
 import logging
 import sys
 
-from utills.parsers.web.habr import Habr
+from src.system.workflow import build_multi_agentic_system
 
 from dotenv import load_dotenv
-import time
 import os
 
 dp = Dispatcher()
@@ -93,15 +91,25 @@ async def post_handler(call: CallbackQuery) -> None:
 @dp.callback_query(F.data == "agent")
 async def post_handler(call: CallbackQuery) -> None:
 
-    db = Database()
+    system = await build_multi_agentic_system()
+    result = system.invoke({
+        "messages": [
+            {"role": "user", "content": "Найди актуальные новости по андроид разработке и сделай отчет. Подготовь публикацию для Telegram-канала"}
+        ]
+    })
 
-    postLink, title, text = Habr.getNews()
-    date = time.ctime(time.time())
+    any_answer = False
+    for step in result:
+        if isinstance(step, dict) and "messages" in step:
+            for msg in step["messages"]:
+                if msg.role == "assistant":
+                    await call.message.answer(msg.content.strip())
+                    any_answer = True
+        elif isinstance(step, str):
+            pass
 
-    data = {"date": date, "title": title, "source_link": postLink, "text": text}
-
-    await db.store_data(data)
-    await call.message.answer(f"done")
+    if not any_answer:
+        await call.message.answer("Извините, не удалось получить ответ.")
     
 
 if __name__ == "__main__":

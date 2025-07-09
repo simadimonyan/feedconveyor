@@ -4,8 +4,8 @@ from langgraph.graph import StateGraph, START, END
 from langchain_core.messages import HumanMessage
 
 from src.domain.analytics import News, Trends, Content
-from src.utills.parsers.analitics.tgstat import TGStat
-from src.agents.workflow import analyst
+from src.bot.utills.parsers.analitics.tgstat import TGStat
+from src.system.workflow import analyst
 
 from bs4 import BeautifulSoup
 import requests
@@ -162,6 +162,7 @@ def generate_topic(state: Content):
     prompt = f"""
         You are an analyst expert in creating engaging and relevant topics for Telegram posts.
         Your task is to generate a topic based on the target audience and the trends gathered from the analysis.
+        It's not your opinion or developer opinion translating its fact summary from some safe sources 
 
         Target Audience: {state['target_audience']}
         Trends: {state['analytics']}
@@ -181,7 +182,9 @@ def summarize(state: Content):
 
     prompt = f"""
         You are an analyst expert in summarizing content for Telegram posts.
+        It's not your opinion or developer opinion translating its fact summary from some safe sources 
         If you need extra context use tools.
+        
         Your task is to create a concise summary based on the trends and the topic generated.
         Topic: {state['post_topic']}
         Target Audience: {state['target_audience']}
