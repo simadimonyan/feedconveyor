@@ -1,5 +1,5 @@
 from src.database.db import Database
-from src.bot.utills.parsers.web.habr import getNews
+from src.bot.handlers.habr import getNews
 from langchain.agents import tool
 
 @tool

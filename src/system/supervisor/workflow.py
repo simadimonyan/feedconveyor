@@ -1,11 +1,11 @@
 import os
-
 from dotenv import load_dotenv
-from langgraph.prebuilt import create_react_agent
 from langchain.prompts import PromptTemplate
 from langchain_gigachat.chat_models import GigaChat
-from langchain_mcp_adapters.client import MultiServerMCPClient
+from langgraph.prebuilt import create_react_agent
 from langgraph_supervisor import create_supervisor
+from src.system.mcp.client import client
+from src.system.supervisor.handoffs import transfer_to_analyst
 
 load_dotenv(".env")
 
@@ -21,24 +21,17 @@ editor_prompt = os.getenv("EDITOR_AGENT_PROMPT")
 # agents
 analyst = None
 
-client = MultiServerMCPClient(
-    {
-        "web": {
-            "transport": "sse",
-            "url": "http://mcp:8082/sse",
-        }
-    }
-)
-
 model = GigaChat(
-        credentials=giga_key,
-        model=giga_model,
-        scope="GIGACHAT_API_PERS",
-        verify_ssl_certs=False,
+    credentials=giga_key,
+    model=giga_model,
+    scope="GIGACHAT_API_PERS",
+    verify_ssl_certs=False,
 )
 
 async def build_analyst():
+
     global analyst
+
     tools = await client.get_tools()
     tool_descriptions = "\n".join([f"{tool.name}: {tool.description}" for tool in tools])
     tool_names = ", ".join([tool.name for tool in tools])
@@ -58,18 +51,24 @@ async def build_analyst():
         prompt=prompt_template,
         name="analyst"
     )
+
     return analyst
 
 async def build_supervisor():
+
     global analyst
+
     if analyst is None:
         analyst = await build_analyst()
 
     supervisor = create_supervisor(
         agents=[analyst],
         model=model,
+        tools=[transfer_to_analyst],
+        add_handoff_messages=True,
         prompt=supervisor_prompt
     )
+
     return supervisor
 
 async def build_multi_agentic_system():

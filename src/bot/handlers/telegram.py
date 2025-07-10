@@ -1,5 +1,5 @@
-from src.bot.utills.parsers.web.habr import getNews
-from src.bot.utills.handlers.ai import AIDirectCall
+from src.bot.handlers.habr import getNews
+from src.bot.handlers.ai import AIDirectCall
 from enum import Enum
 
 ai = AIDirectCall()

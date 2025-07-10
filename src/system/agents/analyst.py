@@ -4,8 +4,8 @@ from langgraph.graph import StateGraph, START, END
 from langchain_core.messages import HumanMessage
 
 from src.domain.analytics import News, Trends, Content
-from src.bot.utills.parsers.analitics.tgstat import TGStat
-from src.system.workflow import analyst
+from src.bot.handlers.tgstat import TGStat
+from src.system.supervisor.workflow import analyst
 
 from bs4 import BeautifulSoup
 import requests
