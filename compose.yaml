@@ -6,12 +6,12 @@ services:
     container_name: telegram-bot
     x-develop:
       watch:
-        - action: sync
+        - action: sync+restart
           path: ./src
           target: /src
           ignore:
             - node_modules/
-        - action: rebuild 
+        - action: rebuild
           path: requirements.txt
     networks:
       - local-network
