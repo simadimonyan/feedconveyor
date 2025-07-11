@@ -1,5 +1,8 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
+from aiogram.types import Message
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
 from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import convert_to_messages
 
@@ -7,20 +10,55 @@ from src.system.supervisor.workflow import build_multi_agentic_system
 
 router = Router()
 
+class TaskState(StatesGroup):
+    waiting_for_task = State()
+
 @router.callback_query(F.data == "agent")
-async def post_handler(call: CallbackQuery) -> None:
+async def post_handler(call: CallbackQuery, state: FSMContext) -> None:
+    await call.message.answer("📋 Пришлите задачу текстом и я её выполню.")
+    await state.set_state(TaskState.waiting_for_task)
+    await call.answer()
+
+
+@router.message(TaskState.waiting_for_task)
+async def handle_task(message: Message, state: FSMContext) -> None:
+    task_text = message.text or message.caption
+    if not task_text:
+        await message.answer("Не удалось найти текст задачи. Отправьте, пожалуйста, ещё раз.")
+        return
+
+    await state.clear()
+    await message.answer("⏳ Выполняю задачу, это может занять некоторое время...")
 
     system = await build_multi_agentic_system()
     config = RunnableConfig(recursion_limit=100)
+    last_message = None
+
     async for chunk in system.astream(
         {"messages": [
-            {"role": "user", "content": "Найди актуальные новости по андроид разработке и сделай отчет. Подготовь публикацию для Telegram-канала"}
+            {"role": "user", "content": task_text}
         ]},
         stream_mode=["values"],
         subgraphs=True,
         config=config
     ):
         pretty_print_messages(chunk)
+        if isinstance(chunk, tuple) and len(chunk) == 3:
+            _, _, update_payload = chunk
+            for node_update in update_payload.values():
+                if isinstance(node_update, dict):
+                    messages = convert_to_messages(node_update.get("messages", []))
+                elif isinstance(node_update, list):
+                    messages = convert_to_messages(node_update)
+                else:
+                    continue
+                if messages:
+                    last_message = messages[-1].content
+
+    if last_message:
+        await message.answer(last_message)
+    else:
+        await message.answer("Не удалось получить результат.")
 
 
 def pretty_print_message(message, indent=False):

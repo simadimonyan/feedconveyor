@@ -1,6 +1,8 @@
 ARG PYTHON_VERSION=3.12.6
 FROM python:${PYTHON_VERSION}-bookworm AS base
 
+ENV PYTHONPATH=/app
+
 WORKDIR /app
 
 RUN --mount=type=cache,target=/root/.cache/pip \
@@ -8,6 +10,5 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python -m pip install -r requirements.txt
 
 COPY . .
-ENV PYTHONPATH=/app
 
 CMD [ "python", "./src/bot/bot.py" ]
