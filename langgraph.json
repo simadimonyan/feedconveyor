@@ -1,7 +1,7 @@
 {
   "dockerfile_lines": [],
   "graphs": {
-    "analyst": "src/agents/analyst.py:graph"
+    "analyst": "src/system/supervisor/workflow.py:build_multi_agentic_system"
   },
   "env": ".env",
   "python_version": "3.12",
