@@ -1,12 +1,14 @@
 from aiogram import F, Router
-from aiogram.types import CallbackQuery
-from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from langchain_core.runnables import RunnableConfig
+from aiogram.types import CallbackQuery
+from aiogram.types import Message
 from langchain_core.messages import convert_to_messages
+from langchain_core.runnables import RunnableConfig
 
-from src.system.supervisor.workflow import build_multi_agentic_system
+from src.domain.analytics import Content
+from src.system.supervisor.state import State as AgentState
+from src.system.supervisor.workflow import graph
 
 router = Router()
 
@@ -15,7 +17,7 @@ class TaskState(StatesGroup):
 
 @router.callback_query(F.data == "agent")
 async def post_handler(call: CallbackQuery, state: FSMContext) -> None:
-    await call.message.answer("📋 Пришлите задачу текстом и я её выполню.")
+    await call.message.answer("📋 Отправьте целевую адиторию для генерации поста.")
     await state.set_state(TaskState.waiting_for_task)
     await call.answer()
 
@@ -30,19 +32,27 @@ async def handle_task(message: Message, state: FSMContext) -> None:
     await state.clear()
     await message.answer("⏳ Выполняю задачу, это может занять некоторое время...")
 
-    system = await build_multi_agentic_system()
-    config = RunnableConfig(recursion_limit=100)
+    config = RunnableConfig(recursion_limit=10)
     last_message = None
 
-    async for chunk in system.astream(
-        {"messages": [
-            {"role": "user", "content": task_text}
-        ]},
+    async for chunk in graph.astream(
+        AgentState(
+            input = [],
+            messages = [{"role": "user", "content": task_text}],
+            content=[],
+            agent_scratchpad=[]
+        ),
         stream_mode=["values"],
         subgraphs=True,
         config=config
     ):
         pretty_print_messages(chunk)
+        # Выводим текущее состояние, если оно есть
+        if hasattr(chunk, "values"):
+            pretty_print_state(chunk.values)
+        elif isinstance(chunk, dict) and "values" in chunk:
+            pretty_print_state(chunk["values"])
+
         if isinstance(chunk, tuple) and len(chunk) == 3:
             _, _, update_payload = chunk
             for node_update in update_payload.values():
@@ -60,6 +70,14 @@ async def handle_task(message: Message, state: FSMContext) -> None:
     else:
         await message.answer("Не удалось получить результат.")
 
+def pretty_print_state(state_values):
+    print("\n===== Current State =====")
+    if not state_values:
+        print("(empty)")
+        return
+    for key, value in state_values.items():
+        print(f"{key}: {value}")
+    print("========================\n")
 
 def pretty_print_message(message, indent=False):
     def fix_separator(line):
@@ -77,37 +95,30 @@ def pretty_print_message(message, indent=False):
     lines = pretty_message.split("\n")
     for i, line in enumerate(lines):
         print(line)
-        # Добавить пустую строку только между логическими блоками (заголовок и обычный текст)
         if line.strip().startswith("="):
-            # Если следующая строка не заголовок и не пустая
             if i + 1 < len(lines) and lines[i + 1].strip() and not lines[i + 1].strip().startswith("="):
                 print()
-
 
 def pretty_print_messages(update, last_message=False):
     is_subgraph = False
 
-    # Проверяем, что пришёл кортеж из трёх элементов: namespace tuple, stream type, и payload dict
     if isinstance(update, tuple) and len(update) == 3:
         ns_tuple, stream_type, update_payload = update
-        # Следим только за нужным типом (например 'values'), если надо
         if stream_type != "values":
             return
 
-        ns = ns_tuple  # namespace как tuple
+        ns = ns_tuple
         if ns:
             graph_id = ns[-1].split(":")[0]
             print(f"Update from subgraph {graph_id}:\n")
             is_subgraph = True
         else:
             print("Update from main graph:\n")
-        update = update_payload  # затем работаем с payload
+        update = update_payload
     else:
-        # Если структура неожиданная — логируем и прекращаем
         print("Unexpected update structure:", repr(update))
         return
 
-    # update теперь — словарь node_name → node_update
     for node_name, node_update in update.items():
         update_label = f"Update from node {node_name}:"
         print(update_label + "\n")

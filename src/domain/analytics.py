@@ -1,11 +1,12 @@
 import operator
 from typing import Annotated, List
-from pydantic import BaseModel
+
 from typing_extensions import TypedDict
+
 
 # SCHEMAS
 
-class News(BaseModel):
+class News(TypedDict):
     title: str
     date: str
     text: str
@@ -14,7 +15,7 @@ class News(BaseModel):
 class Trends(TypedDict):
     trends: List[News]
 
-class Content(TypedDict):
+class Content(TypedDict, total=False):
     target_audience: str
     analytics: Annotated[List[Trends], operator.add]
     post_topic: str
