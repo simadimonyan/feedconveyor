@@ -3,9 +3,6 @@ from typing import Annotated, List
 
 from typing_extensions import TypedDict
 
-
-# SCHEMAS
-
 class News(TypedDict):
     title: str
     date: str

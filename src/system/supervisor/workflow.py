@@ -1,15 +1,16 @@
 import asyncio
 import os
+import time
 
 from dotenv import load_dotenv
 from langchain.prompts.chat import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import SystemMessage
 from langchain_gigachat.chat_models import GigaChat
 from langgraph.prebuilt import create_react_agent
-from langgraph_supervisor import create_supervisor
+from langgraph_supervisor import create_supervisor, create_forward_message_tool
 
 from src.system.mcp.client import client
-from src.system.supervisor.handoffs import transfer_to_analyst, transfer_to_editor
+from src.system.supervisor.handoffs import transfer_to_analyst, transfer_to_editor  # back_to_supervisor
 from src.system.supervisor.state import State
 
 load_dotenv(".env")
@@ -44,7 +45,8 @@ analyst_prompt_template = ChatPromptTemplate.from_messages(
     ]
 ).partial(
     tools=tools,
-    tool_names=tool_names
+    tool_names=tool_names,
+    today=str(time.ctime(time.time()))
 )
 
 print(analyst_prompt_template)
@@ -54,7 +56,7 @@ def analyst_prompt():
 
 analyst = create_react_agent(
     model=model,
-    tools=tools,
+     tools=tools, #+ [back_to_supervisor],
     state_schema=State,
     prompt=analyst_prompt_template,
     name="analyst"
@@ -80,7 +82,7 @@ editor = create_react_agent(
 supervisor = create_supervisor(
     agents=[analyst, editor],
     model=model,
-    tools=[transfer_to_analyst, transfer_to_editor],
+    tools=[transfer_to_analyst, transfer_to_editor, create_forward_message_tool("supervisor")],
     state_schema=State,
     add_handoff_messages=True,
     add_handoff_back_messages=True,

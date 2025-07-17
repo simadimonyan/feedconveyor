@@ -6,12 +6,11 @@ from langgraph.prebuilt import InjectedState
 from langgraph.types import Command
 from langgraph_supervisor.handoff import METADATA_KEY_HANDOFF_DESTINATION
 
-
 def create_custom_handoff_tool(*, agent_name: str, description: str | None) -> BaseTool:
 
     @tool(agent_name, description=description)
     def handoff_to_agent(
-        task_description: Annotated[str, "Поставь задачу следующему агенту в виде промпта, что ему нужно сделать на основе его фунционала"],
+        #task_description: Annotated[str, "Поставь задачу следующему агенту в виде промпта, что ему нужно сделать на основе его фунционала"],
         state: Annotated[dict, InjectedState],
         tool_call_id: Annotated[str, InjectedToolCallId],
     ):
@@ -26,7 +25,7 @@ def create_custom_handoff_tool(*, agent_name: str, description: str | None) -> B
             graph=Command.PARENT,
             update={
                 "messages": messages + [tool_message],
-                "task_description": task_description,
+                #"task_description": task_description,
             },
         )
 
