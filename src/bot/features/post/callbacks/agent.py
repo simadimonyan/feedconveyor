@@ -3,10 +3,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery
 from aiogram.types import Message
-from langchain_core.messages import convert_to_messages
+from langchain_core.messages import convert_to_messages, HumanMessage
 from langchain_core.runnables import RunnableConfig
 
-from src.domain.analytics import Content
 from src.system.supervisor.state import State as AgentState
 from src.system.supervisor.workflow import graph
 
@@ -37,10 +36,8 @@ async def handle_task(message: Message, state: FSMContext) -> None:
 
     async for chunk in graph.astream(
         AgentState(
-            input = [],
-            messages = [{"role": "user", "content": task_text}],
+            messages = [HumanMessage(content=task_text)],
             content=[],
-            agent_scratchpad=[]
         ),
         stream_mode=["values"],
         subgraphs=True,

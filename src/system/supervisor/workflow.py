@@ -1,12 +1,10 @@
 import asyncio
 import os
-from typing import Literal
 
 from dotenv import load_dotenv
 from langchain.prompts.chat import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import SystemMessage
 from langchain_gigachat.chat_models import GigaChat
-from langgraph.constants import START, END
-from langgraph.graph import StateGraph
 from langgraph.prebuilt import create_react_agent
 from langgraph_supervisor import create_supervisor
 
@@ -40,9 +38,11 @@ print(tool_descriptions)
 print(tool_names)
 
 analyst_prompt_template = ChatPromptTemplate.from_messages(
-    [ ("system", analyst_prompt),
-    MessagesPlaceholder(variable_name="messages")
-]).partial(
+    [
+        SystemMessage(content=analyst_prompt),
+        MessagesPlaceholder(variable_name="messages")
+    ]
+).partial(
     tools=tools,
     tool_names=tool_names
 )
@@ -60,20 +60,19 @@ analyst = create_react_agent(
     name="analyst"
 )
 
-editor_prompt_template = ChatPromptTemplate.from_messages([
-    ("system", editor_prompt),
-    MessagesPlaceholder(variable_name="messages")
-]).partial(
-    tools=tools,
-    tool_names=tool_names
+editor_prompt_template = ChatPromptTemplate.from_messages(
+    [
+        SystemMessage(content=editor_prompt),
+        MessagesPlaceholder(variable_name="messages")
+    ]
 )
 
 print(editor_prompt_template)
 
 editor = create_react_agent(
     model=model,
+    tools=[],
     state_schema=State,
-    tools=tools,
     prompt=editor_prompt_template,
     name="editor"
 )
@@ -87,32 +86,6 @@ supervisor = create_supervisor(
     add_handoff_back_messages=True,
     prompt=supervisor_prompt,
     output_mode="full_history"
-).compile()
+)
 
-def router(state: State) -> Literal["analyst", "editor", END]:
-
-    if state.get("remaining_steps", 0) <= 0:
-        return END
-
-    next_agent = state.get("next_agent", "analyst")
-
-    if next_agent == "analyst":
-        new_next = "editor"
-    else:
-        new_next = "analyst"
-
-    return new_next
-
-builder = StateGraph(State)
-
-builder.add_node("analyst", analyst)
-builder.add_node("editor", editor)
-builder.add_node("supervisor", supervisor)
-
-builder.add_edge(START, "supervisor")
-builder.add_conditional_edges("supervisor", router)
-builder.add_edge("analyst", "supervisor")
-builder.add_edge("editor", "supervisor")
-builder.add_edge("supervisor", END)
-
-graph = builder.compile()
+graph = supervisor.compile()
