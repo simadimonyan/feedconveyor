@@ -29,7 +29,7 @@ async def handle_task(message: Message, state: FSMContext) -> None:
     await state.clear()
     await message.answer("⏳ Выполняю задачу, это может занять некоторое время...")
 
-    config = RunnableConfig(recursion_limit=10)
+    config = RunnableConfig(recursion_limit=5)
     last_message = None
 
     async for chunk in graph.astream(
