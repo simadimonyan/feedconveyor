@@ -11,29 +11,50 @@ from src.system.supervisor.workflow import graph
 router = Router()
 
 class TaskState(StatesGroup):
-    waiting_for_task = State()
+    waiting_for_audience = State()
+    waiting_for_sources = State()
 
 @router.callback_query(F.data == "agent")
 async def post_handler(call: CallbackQuery, state: FSMContext) -> None:
     await call.message.answer("📋 Отправьте целевую аудиторию для генерации поста.")
-    await state.set_state(TaskState.waiting_for_task)
+    await state.set_state(TaskState.waiting_for_audience)
     await call.answer()
 
-@router.message(TaskState.waiting_for_task)
-async def handle_task(message: Message, state: FSMContext) -> None:
+@router.message(TaskState.waiting_for_audience)
+async def handle_audience_task(message: Message, state: FSMContext) -> None:
+    data = {}
     task_text = message.text or message.caption
     if not task_text:
-        await message.answer("Не удалось найти текст задачи. Отправьте, пожалуйста, ещё раз.")
+        await message.answer("Не удалось найти целевую аудиторию. Отправьте, пожалуйста, ещё раз.")
         return
+
+    data["audience"] = task_text
+
+    await state.update_data(data=data)
+    await state.set_state(TaskState.waiting_for_sources)
+    await message.answer("📋 Отправьте источники новостей для генерации поста.")
+
+@router.message(TaskState.waiting_for_sources)
+async def handle_sources_task(message: Message, state: FSMContext) -> None:
+    data = await state.get_data()
+    task_text = message.text or message.caption
+    if not task_text:
+        await message.answer("Не удалось найти источники для поста. Отправьте, пожалуйста, ещё раз.")
+        return
+
+    prompt = f"""
+        Целевая аудитория: {data["audience"]}
+        Источники: {task_text}
+    """
 
     await state.clear()
     await message.answer("⏳ Выполняю задачу, это может занять некоторое время...")
 
-    config = RunnableConfig(recursion_limit=5)
+    config = RunnableConfig(recursion_limit=10)
     last_message = None
 
     async for chunk in graph.astream(
-        AgentState(messages=[HumanMessage(content=task_text)], content=[]),
+        AgentState(messages=[HumanMessage(content=prompt)], content=[]),
         stream_mode=["values"],
         subgraphs=True,
         config=config
@@ -49,7 +70,8 @@ async def handle_task(message: Message, state: FSMContext) -> None:
                 if messages:
                     last_message = messages[-1].content
 
-    await message.answer(last_message or "Не удалось получить результат.")
+    await message.answer(last_message or "Не удалось получить результат.",
+            parse_mode="HTML")
 
 def pretty_print_message(message, indent=False):
     def fix_separator(line):
